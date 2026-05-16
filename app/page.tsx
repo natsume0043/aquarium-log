@@ -43,7 +43,10 @@ export default function Home() {
   // 新しい水槽をSupabaseに追加する
   async function addAquarium() {
     const name = newName.trim();
-    if (!name) return;
+    if (!name) {
+      alert("水槽名を入力してください");
+      return;
+    }
 
     const { data, error } = await supabase
       .from("aquariums")
@@ -51,7 +54,10 @@ export default function Home() {
       .select("id, name")
       .single();
 
-    if (error || !data) return;
+    if (error || !data) {
+      alert("追加に失敗しました: " + (error?.message ?? "不明なエラー"));
+      return;
+    }
 
     setAquariums((prev) => [...prev, { id: data.id, name: data.name, records: [] }]);
     setNewName("");
