@@ -6,8 +6,11 @@ export interface WaterChangeRecord {
   memo: string;
 }
 
+export type Category = "aquarium" | "plant";
+
 export interface Aquarium {
   id: string;
   name: string;
+  category: Category;
   records: WaterChangeRecord[];
 }

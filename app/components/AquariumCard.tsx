@@ -14,6 +14,12 @@ interface Props {
   onRename: (aquariumId: string, newName: string) => void;
 }
 
+// カテゴリに応じたラベルを返す
+const LABEL = {
+  aquarium: { action: "💧 水換えした！", elapsed: "最後の水換え" },
+  plant:    { action: "🌿 水やりした！", elapsed: "最後の水やり" },
+} as const;
+
 // 経過日数を計算して返す（日未満は0）
 function elapsedDays(isoString: string): number {
   return Math.floor((Date.now() - new Date(isoString).getTime()) / (1000 * 60 * 60 * 24));
@@ -58,6 +64,7 @@ export default function AquariumCard({ aquarium, onRecord, onDelete, onRename }:
 
   const lastRecord = aquarium.records.at(-1) ?? null;
   const colorClass = urgencyColor(lastRecord?.timestamp ?? null);
+  const label = LABEL[aquarium.category] ?? LABEL.aquarium;
 
   function handleRecord() {
     onRecord(aquarium.id, memo);
@@ -122,7 +129,7 @@ export default function AquariumCard({ aquarium, onRecord, onDelete, onRename }:
           {/* 経過時間テキスト */}
           <p className="text-sm text-gray-500 mt-0.5">
             {lastRecord
-              ? `最後の水換え: ${formatElapsed(lastRecord.timestamp)}`
+              ? `${label.elapsed}: ${formatElapsed(lastRecord.timestamp)}`
               : "まだ記録がありません"}
           </p>
         </div>
@@ -171,7 +178,7 @@ export default function AquariumCard({ aquarium, onRecord, onDelete, onRename }:
           onClick={() => setShowForm(true)}
           className="mt-3 w-full bg-blue-500 text-white py-3 rounded-xl text-base font-semibold hover:bg-blue-600 active:bg-blue-700 transition-colors"
         >
-          💧 水換えした！
+          {label.action}
         </button>
       )}
 
