@@ -89,6 +89,23 @@ export default function Home() {
     );
   }
 
+  // 水槽名をSupabaseで更新する
+  async function renameAquarium(aquariumId: string, newName: string) {
+    const { error } = await supabase
+      .from("aquariums")
+      .update({ name: newName })
+      .eq("id", aquariumId);
+
+    if (error) {
+      alert("名前の変更に失敗しました: " + error.message);
+      return;
+    }
+
+    setAquariums((prev) =>
+      prev.map((a) => (a.id === aquariumId ? { ...a, name: newName } : a))
+    );
+  }
+
   // 水槽をSupabaseから削除する
   async function deleteAquarium(aquariumId: string) {
     if (!confirm("この水槽を削除しますか？履歴もすべて消えます。")) return;
@@ -119,6 +136,7 @@ export default function Home() {
                 aquarium={a}
                 onRecord={recordWaterChange}
                 onDelete={deleteAquarium}
+                onRename={renameAquarium}
               />
             ))}
 
