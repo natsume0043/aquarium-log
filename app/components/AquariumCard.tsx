@@ -76,14 +76,12 @@ export default function AquariumCard({ aquarium, onRecord, onDelete }: Props) {
 
       {/* 水換えボタン */}
       {showForm ? (
-        <form
-          onSubmit={(e) => { e.preventDefault(); handleRecord(); }}
-          className="mt-3 flex flex-col gap-2"
-        >
+        <div className="mt-3 flex flex-col gap-2">
           <VoiceMemoInput value={memo} onChange={setMemo} />
           <div className="flex gap-2">
             <button
-              type="submit"
+              type="button"
+              onClick={handleRecord}
               className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 active:bg-blue-700 transition-colors"
             >
               記録する
@@ -96,7 +94,7 @@ export default function AquariumCard({ aquarium, onRecord, onDelete }: Props) {
               キャンセル
             </button>
           </div>
-        </form>
+        </div>
       ) : (
         <button
           onClick={() => setShowForm(true)}

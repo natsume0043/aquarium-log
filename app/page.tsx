@@ -118,10 +118,7 @@ export default function Home() {
 
             {/* 水槽追加フォーム */}
             {showAddForm ? (
-              <form
-                onSubmit={(e) => { e.preventDefault(); addAquarium(); }}
-                className="bg-white rounded-2xl border-2 border-dashed border-blue-300 p-4 space-y-3"
-              >
+              <div className="bg-white rounded-2xl border-2 border-dashed border-blue-300 p-4 space-y-3">
                 <p className="text-sm font-semibold text-gray-600">水槽名を入力</p>
                 <input
                   type="text"
@@ -132,7 +129,8 @@ export default function Home() {
                 />
                 <div className="flex gap-2">
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={addAquarium}
                     className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
                   >
                     追加
@@ -145,7 +143,7 @@ export default function Home() {
                     キャンセル
                   </button>
                 </div>
-              </form>
+              </div>
             ) : (
               <button
                 onClick={() => setShowAddForm(true)}
