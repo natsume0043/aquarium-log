@@ -1,65 +1,131 @@
-import Image from "next/image";
+"use client";
+
+// アクアリウム水換え記録アプリ メインページ
+
+import { useEffect, useState } from "react";
+import type { Aquarium } from "./types";
+import { loadAquariums, saveAquariums } from "./storage";
+import AquariumCard from "./components/AquariumCard";
 
 export default function Home() {
+  const [aquariums, setAquariums] = useState<Aquarium[]>([]);
+  const [newName, setNewName] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  // 初回マウント時にlocalStorageからデータを読み込む
+  useEffect(() => {
+    setAquariums(loadAquariums());
+  }, []);
+
+  // 水槽リストが変わるたびにlocalStorageへ保存する
+  useEffect(() => {
+    saveAquariums(aquariums);
+  }, [aquariums]);
+
+  // 新しい水槽を追加する
+  function addAquarium() {
+    const name = newName.trim();
+    if (!name) return;
+    const aquarium: Aquarium = {
+      id: crypto.randomUUID(),
+      name,
+      records: [],
+    };
+    setAquariums((prev) => [...prev, aquarium]);
+    setNewName("");
+    setShowAddForm(false);
+  }
+
+  // 水換えを記録する
+  function recordWaterChange(aquariumId: string, memo: string) {
+    setAquariums((prev) =>
+      prev.map((a) =>
+        a.id !== aquariumId
+          ? a
+          : {
+              ...a,
+              records: [
+                ...a.records,
+                {
+                  id: crypto.randomUUID(),
+                  timestamp: new Date().toISOString(),
+                  memo: memo.trim(),
+                },
+              ],
+            }
+      )
+    );
+  }
+
+  // 水槽を削除する
+  function deleteAquarium(aquariumId: string) {
+    if (!confirm("この水槽を削除しますか？履歴もすべて消えます。")) return;
+    setAquariums((prev) => prev.filter((a) => a.id !== aquariumId));
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-cyan-50 pb-16">
+      {/* ヘッダー */}
+      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-blue-100 px-4 py-3">
+        <h1 className="text-xl font-bold text-blue-800 text-center">🐠 水換えログ</h1>
+      </header>
+
+      <div className="max-w-lg mx-auto px-4 pt-5 space-y-4">
+        {/* 水槽カード一覧 */}
+        {aquariums.length === 0 && (
+          <p className="text-center text-gray-400 text-sm mt-16">
+            まだ水槽が登録されていません。<br />下のボタンから追加してください。
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        )}
+        {aquariums.map((a) => (
+          <AquariumCard
+            key={a.id}
+            aquarium={a}
+            onRecord={recordWaterChange}
+            onDelete={deleteAquarium}
+          />
+        ))}
+
+        {/* 水槽追加フォーム */}
+        {showAddForm ? (
+          <form
+            onSubmit={(e) => { e.preventDefault(); addAquarium(); }}
+            className="bg-white rounded-2xl border-2 border-dashed border-blue-300 p-4 space-y-3"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <p className="text-sm font-semibold text-gray-600">水槽名を入力</p>
+            <input
+              type="text"
+              placeholder="例: 60cm メイン水槽"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              autoFocus
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="flex-1 bg-blue-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
+              >
+                追加
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                className="px-4 py-2 rounded-lg text-sm text-gray-500 bg-gray-100 hover:bg-gray-200"
+              >
+                キャンセル
+              </button>
+            </div>
+          </form>
+        ) : (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="w-full py-3 rounded-2xl border-2 border-dashed border-blue-300 text-blue-500 text-sm font-semibold hover:bg-blue-50 transition-colors"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            ＋ 水槽を追加
+          </button>
+        )}
+      </div>
+    </main>
   );
 }
