@@ -18,6 +18,7 @@ export default function Home() {
   const [newName, setNewName] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   // 初回マウント時にSupabaseから全データを読み込む
   useEffect(() => {
@@ -56,7 +57,10 @@ export default function Home() {
       setItems(list);
       setLoading(false);
     }
-    fetchAll();
+    fetchAll().catch((e) => {
+      setFetchError(String(e));
+      setLoading(false);
+    });
   }, []);
 
   // 現在のタブのアイテムだけ絞り込む
@@ -179,6 +183,11 @@ export default function Home() {
       <div className="max-w-lg mx-auto px-4 pt-5 space-y-4">
         {loading ? (
           <p className="text-center text-gray-400 text-sm mt-16">読み込み中...</p>
+        ) : fetchError ? (
+          <div className="mt-16 bg-red-50 border border-red-300 rounded-xl p-4 text-xs text-red-700 break-all">
+            <p className="font-bold mb-1">エラーが発生しました</p>
+            <p>{fetchError}</p>
+          </div>
         ) : (
           <>
             {visibleItems.length === 0 && (
