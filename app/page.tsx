@@ -22,10 +22,22 @@ export default function Home() {
   // 初回マウント時にSupabaseから全データを読み込む
   useEffect(() => {
     async function fetchAll() {
-      const { data: aqRows } = await supabase
+      // categoryカラムがない場合に備えてフォールバックする
+      let aqRows: { id: string; name: string; category?: string }[] | null = null;
+      const { data: aqData, error: aqError } = await supabase
         .from("aquariums")
         .select("id, name, category")
         .order("created_at");
+      if (aqError) {
+        // categoryカラムが存在しない場合はcategoryなしで再取得する
+        const { data: fallback } = await supabase
+          .from("aquariums")
+          .select("id, name")
+          .order("created_at");
+        aqRows = fallback;
+      } else {
+        aqRows = aqData;
+      }
 
       const { data: wcRows } = await supabase
         .from("water_changes")
@@ -35,7 +47,7 @@ export default function Home() {
       const list: Aquarium[] = (aqRows ?? []).map((a) => ({
         id: a.id,
         name: a.name,
-        category: a.category ?? "aquarium",
+        category: (a.category ?? "aquarium") as Aquarium["category"],
         records: (wcRows ?? [])
           .filter((w) => w.aquarium_id === a.id)
           .map((w) => ({ id: w.id, timestamp: w.changed_at, memo: w.memo })),
